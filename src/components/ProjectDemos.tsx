@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Terminal, Play, RefreshCw, Plus, Trash2, MapPin, ChevronRight, Code2, CheckCircle2, BookOpen } from "lucide-react";
+import { Terminal, Play, RefreshCw, Plus, Trash2, MapPin, ChevronRight, Code2, CheckCircle2, BookOpen, Triangle, HelpCircle, Binary, ArrowLeftRight } from "lucide-react";
 
 // ==========================================
 // 1. PYTHON CLI TERMINAL SIMULATOR
@@ -742,6 +742,593 @@ export function MivaStudyPlannerDemo() {
                 </div>
               ))
             )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 4. RIGHT-ANGLED TRIANGLE CHECKER
+// ==========================================
+export function RightAngledTriangleDemo() {
+  const [sideA, setSideA] = useState("3");
+  const [sideB, setSideB] = useState("4");
+  const [sideC, setSideC] = useState("5");
+  const [result, setResult] = useState<{
+    isValid: boolean;
+    isRight: boolean;
+    explanation: string;
+    angles: { A: number; B: number; C: number };
+    coords: { x1: number; y1: number; x2: number; y2: number; x3: number; y3: number } | null;
+  } | null>(null);
+
+  const calculateTriangle = (sa: string, sb: string, sc: string) => {
+    const a = parseFloat(sa);
+    const b = parseFloat(sb);
+    const c = parseFloat(sc);
+
+    if (isNaN(a) || isNaN(b) || isNaN(c) || a <= 0 || b <= 0 || c <= 0) {
+      setResult({
+        isValid: false,
+        isRight: false,
+        explanation: "Please enter positive numerical values for all three sides.",
+        angles: { A: 0, B: 0, C: 0 },
+        coords: null
+      });
+      return;
+    }
+
+    // Sort sides to verify triangle inequality and hypotenuse
+    const sides = [a, b, c].sort((x, y) => x - y);
+    const [x, y, z] = sides;
+
+    // Check triangle inequality theorem
+    if (x + y <= z) {
+      setResult({
+        isValid: false,
+        isRight: false,
+        explanation: `Invalid Triangle: Side lengths ${x}, ${y}, and ${z} do not satisfy the triangle inequality theorem (the sum of any two sides must be strictly greater than the third side: ${x} + ${y} = ${x+y} ≤ ${z}).`,
+        angles: { A: 0, B: 0, C: 0 },
+        coords: null
+      });
+      return;
+    }
+
+    // Check if right-angled: x^2 + y^2 ≈ z^2
+    const lhs = x * x + y * y;
+    const rhs = z * z;
+    const diff = Math.abs(lhs - rhs);
+    const isRight = diff < 0.001; // epsilon for float accuracy
+
+    // Calculate angles using Law of Cosines (in degrees)
+    // cos(A) = (b^2 + c^2 - a^2) / (2bc)
+    const radA = Math.acos(Math.max(-1, Math.min(1, (b*b + c*c - a*a) / (2*b*c))));
+    const radB = Math.acos(Math.max(-1, Math.min(1, (a*a + c*c - b*b) / (2*a*c))));
+    const radC = Math.acos(Math.max(-1, Math.min(1, (a*a + b*b - c*c) / (2*a*b))));
+
+    const degA = (radA * 180) / Math.PI;
+    const degB = (radB * 180) / Math.PI;
+    const degC = (radC * 180) / Math.PI;
+
+    // Scale coordinates for plotting
+    // Base is side 'z' (longest side), drawn from (0,0) to (z, 0)
+    // alpha is the angle between side 'y' and side 'z' (opposite to side 'x')
+    // cosAlpha = (y^2 + z^2 - x^2) / (2yz)
+    const cosAlpha = (y*y + z*z - x*x) / (2*y*z);
+    const alpha = Math.acos(Math.max(-1, Math.min(1, cosAlpha)));
+
+    const x1 = 0;
+    const y1 = 0;
+    const x2 = z;
+    const y2 = 0;
+    const x3 = y * Math.cos(alpha);
+    const y3 = y * Math.sin(alpha);
+
+    // Scaling container dimensions
+    const padding = 20;
+    const svgW = 220;
+    const svgH = 150;
+
+    const minX = Math.min(0, x2, x3);
+    const maxX = Math.max(0, x2, x3);
+    const minY = Math.min(0, y2, y3);
+    const maxY = Math.max(0, y2, y3);
+
+    const triW = maxX - minX;
+    const triH = maxY - minY;
+
+    const scaleX = (svgW - 2 * padding) / (triW || 1);
+    const scaleY = (svgH - 2 * padding) / (triH || 1);
+    const scale = Math.min(scaleX, scaleY);
+
+    const tx = padding - minX * scale;
+    const ty = svgH - padding;
+
+    const px1 = x1 * scale + tx;
+    const py1 = ty - y1 * scale;
+    const px2 = x2 * scale + tx;
+    const py2 = ty - y2 * scale;
+    const px3 = x3 * scale + tx;
+    const py3 = ty - y3 * scale;
+
+    const formattedExplanation = isRight
+      ? `Yes! This forms a Right-Angled Triangle. It satisfies Pythagoras' theorem: ${x}² + ${y}² = ${z}² (${x*x} + ${y*y} = ${z*z}).`
+      : `No, this is not a Right-Angled Triangle. ${x}² + ${y}² (${x*x + y*y}) is not equal to ${z}² (${z*z}). The mismatch delta is ${diff.toFixed(2)}.`;
+
+    setResult({
+      isValid: true,
+      isRight,
+      explanation: formattedExplanation,
+      angles: { A: degA, B: degB, C: degC },
+      coords: { x1: px1, y1: py1, x2: px2, y2: py2, x3: px3, y3: py3 }
+    });
+  };
+
+  useEffect(() => {
+    calculateTriangle(sideA, sideB, sideC);
+  }, [sideA, sideB, sideC]);
+
+  const loadPreset = (a: string, b: string, c: string) => {
+    setSideA(a);
+    setSideB(b);
+    setSideC(c);
+  };
+
+  return (
+    <div className="bg-zinc-950 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden text-sm flex flex-col lg:h-[400px]">
+      {/* Top bar */}
+      <div className="bg-zinc-950 px-4 py-3 border-b border-zinc-900 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Triangle className="w-4 h-4 text-zinc-400" />
+          <span className="font-display font-medium text-zinc-200 text-xs">Right-Angled Triangle Checker</span>
+        </div>
+        <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+          Geometry Simulator
+        </span>
+      </div>
+
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 p-4 gap-4 overflow-y-auto">
+        {/* Left column - input & presets */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4">
+          <div className="space-y-3 bg-[#0c0c0c] p-4 rounded-xl border border-zinc-800/80 font-sans">
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input Triplet Sides</div>
+            
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="text-[9px] text-zinc-500 block mb-1">Side A</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  value={sideA}
+                  onChange={(e) => setSideA(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-200 outline-none focus:border-zinc-500 font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 block mb-1">Side B</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  value={sideB}
+                  onChange={(e) => setSideB(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-200 outline-none focus:border-zinc-500 font-mono"
+                />
+              </div>
+              <div>
+                <label className="text-[9px] text-zinc-500 block mb-1">Side C</label>
+                <input
+                  type="number"
+                  min="0.1"
+                  step="any"
+                  value={sideC}
+                  onChange={(e) => setSideC(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-200 outline-none focus:border-zinc-500 font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-zinc-900/80">
+              <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1.5 font-semibold">Triangular Presets</div>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => loadPreset("3", "4", "5")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono"
+                >
+                  3, 4, 5 (Right)
+                </button>
+                <button
+                  onClick={() => loadPreset("5", "12", "13")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono"
+                >
+                  5, 12, 13 (Right)
+                </button>
+                <button
+                  onClick={() => loadPreset("6", "8", "10")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono"
+                >
+                  6, 8, 10 (Right)
+                </button>
+                <button
+                  onClick={() => loadPreset("4", "5", "6")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono"
+                >
+                  4, 5, 6 (Acute)
+                </button>
+                <button
+                  onClick={() => loadPreset("2", "3", "7")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono"
+                >
+                  2, 3, 7 (Invalid)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/80 flex items-center gap-2.5">
+            <HelpCircle className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+            <div className="text-[10px] text-zinc-400 font-mono leading-normal">
+              Pythagorean theorem asserts that for any right triangle, the sum of squares of the shorter legs equals the hypotenuse square (<span className="text-zinc-200">a² + b² = c²</span>).
+            </div>
+          </div>
+        </div>
+
+        {/* Right column - interactive render & result explanation */}
+        <div className="lg:col-span-7 flex flex-col justify-between space-y-3">
+          {/* Visual Canvas Panel */}
+          <div className="flex-1 bg-[#080808] border border-zinc-850 rounded-xl p-3 flex flex-col items-center justify-center relative min-h-[160px] lg:min-h-0">
+            {result?.isValid && result.coords ? (
+              <svg width="220" height="150" className="overflow-visible">
+                {/* Connecting grid line path */}
+                <polygon
+                  points={`${result.coords.x1},${result.coords.y1} ${result.coords.x2},${result.coords.y2} ${result.coords.x3},${result.coords.y3}`}
+                  className={`fill-zinc-900/40 stroke-2 transition-all duration-350 ${
+                    result.isRight ? "stroke-zinc-100" : "stroke-zinc-700"
+                  }`}
+                />
+
+                {/* Vertex Dots */}
+                <circle cx={result.coords.x1} cy={result.coords.y1} r="4" className="fill-zinc-400 stroke stroke-zinc-950 stroke-2" />
+                <circle cx={result.coords.x2} cy={result.coords.y2} r="4" className="fill-zinc-400 stroke stroke-zinc-950 stroke-2" />
+                <circle cx={result.coords.x3} cy={result.coords.y3} r="4" className="fill-zinc-200 stroke stroke-zinc-950 stroke-2 animate-pulse" />
+
+                {/* Label angles */}
+                <text x={result.coords.x1 + 6} y={result.coords.y1 - 6} className="fill-zinc-500 font-mono text-[9px]">
+                  {result.angles.A.toFixed(1)}°
+                </text>
+                <text x={result.coords.x2 - 25} y={result.coords.y2 - 6} className="fill-zinc-500 font-mono text-[9px]">
+                  {result.angles.B.toFixed(1)}°
+                </text>
+                <text x={result.coords.x3 - 10} y={result.coords.y3 + 12} className="fill-zinc-300 font-mono text-[9px] font-semibold">
+                  {result.angles.C.toFixed(1)}°
+                </text>
+              </svg>
+            ) : (
+              <div className="text-zinc-600 text-xs text-center font-mono select-none px-4 space-y-1">
+                <div>[ INVALID METRICS ]</div>
+                <div className="text-[10px] text-zinc-700">Inputs must define a valid physical triangle</div>
+              </div>
+            )}
+          </div>
+
+          {/* Explanation Banner */}
+          <div className={`p-3 rounded-xl border text-[11px] leading-relaxed font-sans ${
+            result?.isValid 
+              ? result.isRight 
+                ? "bg-zinc-900/80 border-zinc-800 text-zinc-200"
+                : "bg-zinc-900/20 border-zinc-900/60 text-zinc-400"
+              : "bg-red-950/10 border-red-900/20 text-zinc-500"
+          }`}>
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
+                result?.isValid && result.isRight ? "text-zinc-300" : "text-zinc-600"
+              }`} />
+              <p>{result?.explanation}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// 5. PALINDROME NUMBER CHECKER
+// ==========================================
+interface PalindromeStep {
+  step: number;
+  remaining: number;
+  digit: number;
+  currentReversed: number;
+  formula: string;
+}
+
+export function PalindromeNumberDemo() {
+  const [inputValue, setInputValue] = useState("121");
+  const [steps, setSteps] = useState<PalindromeStep[]>([]);
+  const [isPalindrome, setIsPalindrome] = useState<boolean>(true);
+  const [reason, setReason] = useState<string>("");
+  const [isNegative, setIsNegative] = useState<boolean>(false);
+  const [hasTrailingZero, setHasTrailingZero] = useState<boolean>(false);
+
+  const checkPalindrome = (valStr: string) => {
+    const trimmed = valStr.trim();
+    if (!trimmed) {
+      setSteps([]);
+      setIsPalindrome(false);
+      setReason("Please enter an integer to verify.");
+      setIsNegative(false);
+      setHasTrailingZero(false);
+      return;
+    }
+
+    const num = parseInt(trimmed, 10);
+    if (isNaN(num) || trimmed.includes(".")) {
+      setSteps([]);
+      setIsPalindrome(false);
+      setReason("Please enter a valid whole integer (decimals/text not allowed).");
+      setIsNegative(false);
+      setHasTrailingZero(false);
+      return;
+    }
+
+    if (num < 0) {
+      setIsNegative(true);
+      setHasTrailingZero(false);
+      setIsPalindrome(false);
+      setReason(`No. Negative numbers are not palindromic. The minus sign '-' sits at the left end, so reversing "${trimmed}" becomes "${trimmed.split("").reverse().join("")}", which mismatches.`);
+      setSteps([]);
+      return;
+    }
+
+    if (num !== 0 && num % 10 === 0) {
+      setIsNegative(false);
+      setHasTrailingZero(true);
+      setIsPalindrome(false);
+      setReason(`No. Numbers ending in 0 (except 0 itself) cannot be palindromes because a standard positive integer cannot start with a leading 0 (e.g. reversing "${trimmed}" yields "0${trimmed.slice(0, -1).split("").reverse().join("")}", which loses its leading 0 as a number).`);
+      setSteps([]);
+      return;
+    }
+
+    setIsNegative(false);
+    setHasTrailingZero(false);
+
+    // Run modular arithmetic reverse simulation
+    let temp = num;
+    let reversed = 0;
+    const computedSteps: PalindromeStep[] = [];
+    let stepCount = 1;
+
+    if (num === 0) {
+      computedSteps.push({
+        step: 1,
+        remaining: 0,
+        digit: 0,
+        currentReversed: 0,
+        formula: "0"
+      });
+    }
+
+    while (temp > 0) {
+      const digit = temp % 10;
+      const prevReversed = reversed;
+      reversed = reversed * 10 + digit;
+      const nextTemp = Math.floor(temp / 10);
+
+      computedSteps.push({
+        step: stepCount,
+        remaining: nextTemp,
+        digit,
+        currentReversed: reversed,
+        formula: `${prevReversed} × 10 + ${digit} = ${reversed}`
+      });
+
+      temp = nextTemp;
+      stepCount++;
+    }
+
+    setSteps(computedSteps);
+    const isPal = reversed === num;
+    setIsPalindrome(isPal);
+
+    if (isPal) {
+      setReason(`Yes! ${num} is a palindrome because reversing its digits via modulo arithmetic yields exactly ${reversed} (identical to original).`);
+    } else {
+      setReason(`No! ${num} is not a palindrome because reversing its digits yields ${reversed} (which is different from original).`);
+    }
+  };
+
+  useEffect(() => {
+    checkPalindrome(inputValue);
+  }, [inputValue]);
+
+  const loadPreset = (val: string) => {
+    setInputValue(val);
+  };
+
+  // Split digits for horizontal visual comparison
+  const originalDigits = inputValue.replace(/[^0-9-]/g, "").split("");
+  const reversedDigits = [...originalDigits].reverse();
+
+  return (
+    <div className="bg-zinc-950 rounded-2xl border border-zinc-800 shadow-xl overflow-hidden text-sm flex flex-col lg:h-[400px]">
+      {/* Top bar */}
+      <div className="bg-zinc-950 px-4 py-3 border-b border-zinc-900 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Binary className="w-4 h-4 text-zinc-400" />
+          <span className="font-display font-medium text-zinc-200 text-xs">Palindrome Number Checker</span>
+        </div>
+        <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+          Arithmetic Simulator
+        </span>
+      </div>
+
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 p-4 gap-4 overflow-y-auto">
+        {/* Left column - input & presets */}
+        <div className="lg:col-span-5 flex flex-col justify-between space-y-4 font-sans">
+          <div className="space-y-3 bg-[#0c0c0c] p-4 rounded-xl border border-zinc-800/80">
+            <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Input Integer</div>
+            
+            <div>
+              <label className="text-[9px] text-zinc-500 block mb-1">Enter a Whole Number</label>
+              <input
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value.replace(/[^0-9-]/g, ""))}
+                placeholder="e.g. 12321"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-2 text-xs text-zinc-200 outline-none focus:border-zinc-500 font-mono tracking-wider"
+              />
+            </div>
+
+            <div className="pt-2 border-t border-zinc-900/80">
+              <div className="text-[9px] text-zinc-500 uppercase tracking-wider mb-1.5 font-semibold">Algorithmic Presets</div>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  onClick={() => loadPreset("121")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono cursor-pointer"
+                >
+                  121 (Pal)
+                </button>
+                <button
+                  onClick={() => loadPreset("12321")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono cursor-pointer"
+                >
+                  12321 (Pal)
+                </button>
+                <button
+                  onClick={() => loadPreset("-121")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono cursor-pointer"
+                >
+                  -121 (Negative)
+                </button>
+                <button
+                  onClick={() => loadPreset("1230")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono cursor-pointer"
+                >
+                  1230 (Zero End)
+                </button>
+                <button
+                  onClick={() => loadPreset("4554")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono cursor-pointer"
+                >
+                  4554 (Even Pal)
+                </button>
+                <button
+                  onClick={() => loadPreset("1234")}
+                  className="text-[10px] px-2 py-1 bg-zinc-900 hover:bg-zinc-850 text-zinc-300 border border-zinc-800 rounded transition font-mono cursor-pointer"
+                >
+                  1234 (Regular)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-zinc-900/40 p-3 rounded-xl border border-zinc-800/80 flex items-center gap-2.5">
+            <ArrowLeftRight className="w-4 h-4 text-zinc-500 flex-shrink-0" />
+            <div className="text-[10px] text-zinc-400 font-mono leading-normal">
+              A purely mathematical method reverses digits by harvesting the lowest digit (<span className="text-zinc-200">num % 10</span>) and rebuilding the opposite structure incrementally.
+            </div>
+          </div>
+        </div>
+
+        {/* Right column - interactive render & result explanation */}
+        <div className="lg:col-span-7 flex flex-col justify-between space-y-3">
+          {/* Visual Digits Comparison Panel */}
+          <div className="flex-1 bg-[#080808] border border-zinc-850 rounded-xl p-3.5 flex flex-col justify-center space-y-3.5 min-h-[160px] lg:min-h-0">
+            {originalDigits.length > 0 ? (
+              <div className="space-y-3">
+                {/* Original digit boxes */}
+                <div className="space-y-1">
+                  <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono font-semibold">Original Sequence:</div>
+                  <div className="flex gap-1.5">
+                    {originalDigits.map((dig, idx) => (
+                      <div
+                        key={`orig-${idx}`}
+                        className={`w-7 h-7 rounded border font-mono text-xs font-bold flex items-center justify-center transition-colors ${
+                          isPalindrome 
+                            ? "bg-zinc-900/60 border-zinc-700 text-zinc-200" 
+                            : "bg-zinc-950 border-zinc-850 text-zinc-400"
+                        }`}
+                      >
+                        {dig}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Arrow indicator */}
+                <div className="flex items-center gap-1.5 text-zinc-600 px-1">
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  <span className="text-[9px] font-mono">Reverse Check</span>
+                </div>
+
+                {/* Reversed digit boxes */}
+                <div className="space-y-1">
+                  <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono font-semibold">Reversed Sequence:</div>
+                  <div className="flex gap-1.5">
+                    {reversedDigits.map((dig, idx) => {
+                      const matches = originalDigits[idx] === dig;
+                      return (
+                        <div
+                          key={`rev-${idx}`}
+                          className={`w-7 h-7 rounded border font-mono text-xs font-bold flex items-center justify-center transition-colors ${
+                            isPalindrome
+                              ? "bg-zinc-900/80 border-zinc-700 text-zinc-100"
+                              : matches && !isNegative && !hasTrailingZero
+                                ? "bg-zinc-900/40 border-zinc-800 text-zinc-300"
+                                : "bg-red-950/10 border-red-900/20 text-red-400"
+                          }`}
+                        >
+                          {dig}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-zinc-600 text-xs text-center font-mono select-none py-4">
+                [ NO DATA TO DISPLAY ]
+              </div>
+            )}
+
+            {/* Step-by-Step execution trace */}
+            {steps.length > 0 && (
+              <div className="border-t border-zinc-900 pt-3">
+                <div className="text-[9px] uppercase tracking-wider text-zinc-500 font-mono font-semibold mb-1.5">Trace of Modulo Loop:</div>
+                <div className="max-h-[85px] overflow-y-auto space-y-1 pr-1 scrollbar-thin">
+                  {steps.map((s) => (
+                    <div key={s.step} className="flex justify-between items-center text-[10px] font-mono text-zinc-400 bg-zinc-900/30 px-2 py-1 rounded border border-zinc-900/50">
+                      <div>
+                        Step {s.step}: <span className="text-zinc-500">pop =</span> <span className="text-zinc-300 font-semibold">{s.digit}</span>
+                      </div>
+                      <div className="text-zinc-500">
+                        rev: <span className="text-zinc-300">{s.formula}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Explanation Banner */}
+          <div className={`p-3 rounded-xl border text-[11px] leading-relaxed font-sans ${
+            inputValue.trim()
+              ? isPalindrome 
+                ? "bg-zinc-900/80 border-zinc-800 text-zinc-200"
+                : "bg-zinc-900/20 border-zinc-900/60 text-zinc-400"
+              : "bg-zinc-950 border-zinc-900 text-zinc-500"
+          }`}>
+            <div className="flex items-start gap-2">
+              <CheckCircle2 className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${
+                inputValue.trim() && isPalindrome ? "text-zinc-300" : "text-zinc-600"
+              }`} />
+              <p>{reason}</p>
+            </div>
           </div>
         </div>
       </div>

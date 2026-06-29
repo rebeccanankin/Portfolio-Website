@@ -1,49 +1,37 @@
 import React, { useState } from "react";
 import { Project } from "../types";
-import { PythonTerminalDemo, AbujaRouteDemo, MivaStudyPlannerDemo } from "./ProjectDemos";
+import { RightAngledTriangleDemo, PalindromeNumberDemo } from "./ProjectDemos";
 import { FolderGit2, Github, Award, CheckCircle2 } from "lucide-react";
 
 const PROJECTS_DATA: Project[] = [
   {
-    id: "route-solver",
-    title: "Abuja Route & Traffic Solver",
-    description: "An interactive graph-theory optimizer calculating the shortest pathways around Abuja districts based on traffic weights.",
-    longDescription: "Built as a practical application of Miva CSS 121 (Algorithms and Data Structures I). It solves shortest-path traversal on a customized node grid connecting Dutse Sokale, Gwarinpa, Wuse II, and the Miva University HQ campus using a modified Dijkstra's formula with weighted traffic scaling multipliers.",
+    id: "palindrome-checker",
+    title: "Palindrome Number Checker",
+    description: "An algorithmic checker validating mathematical palindrome sequences with interactive visual digit decomposition.",
+    longDescription: "A clean algorithmic utility built to verify whether an integer reads the same backward as forward. It features step-by-step mathematical decomposition (avoiding simple string-reversal shortcuts to demonstrate actual modular arithmetic logic), interactive digit splitting, and visual progression of the reversed digit reconstruction process.",
     category: "Algorithm",
-    tags: ["TypeScript", "Graph Theory", "Dijkstra Algorithm", "Abuja Nodes"],
-    status: "completed",
-    level: "Intermediate",
-    githubUrl: "https://github.com/rebeccanankin21/abuja-routing-dijkstra",
-    demoType: "traffic-sim"
-  },
-  {
-    id: "study-planner",
-    title: "Miva Course Task Planner & Study Tracker",
-    description: "A client-side study task planner modeled to track and schedule academic homework load and coordinate study hourly budgets.",
-    longDescription: "A study-planning tool designed to assist computer science student cohorts at Miva in budgeting study hours. It enables students to record custom first-year course codes, schedule specific exam preparations or assignments, set priorities, and dynamically compute remaining weekly study hour budgets.",
-    category: "Web App",
-    tags: ["React 19", "Tailwind CSS", "Time Budgets", "Course Scheduling"],
+    tags: ["React 19", "Modular Arithmetic", "Algorithms", "Dynamic Step Engine"],
     status: "completed",
     level: "Beginner",
-    githubUrl: "https://github.com/rebeccanankin21/miva-study-tracker",
-    demoType: "study-planner"
+    githubUrl: "https://github.com/rebeccanankin/Palindrome-Number-Checker",
+    demoType: "palindrome-checker"
   },
   {
-    id: "budget-cli",
-    title: "Python Student Budget CLI",
-    description: "A command-line terminal interface simulating a personal student ledger built inside a custom retro Python shell.",
-    longDescription: "Created to master Python CLI basics and standard structural logic. It implements full CRUD data logging for local students in Abuja to log transport (Keke/Uber), study data, and food costs, with automated threshold warning triggers.",
-    category: "Python CLI",
-    tags: ["Python 3.x", "Command Shell", "Data Logging", "CLI UX"],
+    id: "triangle-checker",
+    title: "Right-Angled Triangle Checker",
+    description: "A geometry checker utility verifying Pythagorean triples with dynamic SVG triangle visualization and angle metrics.",
+    longDescription: "A geometric proof utility built to verify whether any three side lengths satisfy the Pythagorean Theorem. It implements dynamic inputs, validates triangle inequalities, calculates precise angle measures using the Law of Cosines, and projects coordinates to render a fully custom SVG triangle on the fly.",
+    category: "Algorithm",
+    tags: ["React 19", "Trigonometry", "Law of Cosines", "Dynamic SVG"],
     status: "completed",
     level: "Beginner",
-    githubUrl: "https://github.com/rebeccanankin21/student-budget-cli",
-    demoType: "python-terminal"
+    githubUrl: "https://github.com/rebeccanankin/Right-Angled-Triangle-Checker",
+    demoType: "triangle-checker"
   }
 ];
 
 export default function ProjectsSection() {
-  const [selectedProjectId, setSelectedProjectId] = useState<string>("route-solver");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("palindrome-checker");
 
   const activeProject = PROJECTS_DATA.find((p) => p.id === selectedProjectId) || PROJECTS_DATA[0];
 
@@ -71,7 +59,7 @@ export default function ProjectsSection() {
                   : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
-              {p.category}
+              {p.title.split(" ")[0]}
             </button>
           ))}
         </div>
@@ -93,7 +81,7 @@ export default function ProjectsSection() {
 
             <div className="space-y-1">
               <h4 className="font-display font-bold text-base text-zinc-100">{activeProject.title}</h4>
-              <p className="text-[10px] font-mono text-zinc-500">github.com/rebeccanankin21</p>
+              <p className="text-[10px] font-mono text-zinc-500">github.com/rebeccanankin</p>
             </div>
 
             <p className="text-xs text-zinc-300 leading-relaxed font-sans">{activeProject.longDescription}</p>
@@ -138,9 +126,8 @@ export default function ProjectsSection() {
 
         {/* Live Interactive Simulator Pane */}
         <div className="xl:col-span-8 flex flex-col justify-center">
-          {activeProject.demoType === "traffic-sim" && <AbujaRouteDemo />}
-          {activeProject.demoType === "study-planner" && <MivaStudyPlannerDemo />}
-          {activeProject.demoType === "python-terminal" && <PythonTerminalDemo />}
+          {activeProject.demoType === "palindrome-checker" && <PalindromeNumberDemo />}
+          {activeProject.demoType === "triangle-checker" && <RightAngledTriangleDemo />}
         </div>
       </div>
     </div>

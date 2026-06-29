@@ -9,7 +9,7 @@ export interface Project {
   liveUrl?: string;
   status: "completed" | "in-progress" | "concept";
   level: "Beginner" | "Intermediate" | "Advanced";
-  demoType: "traffic-sim" | "study-planner" | "python-terminal" | "quiz";
+  demoType: "triangle-checker" | "palindrome-checker";
 }
 
 export interface TimelineItem {
